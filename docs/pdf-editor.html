@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Editor - Удаление и перестановка страниц</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .page-card {
+            position: relative;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .page-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .page-card.selected {
+            border-color: var(--error-color);
+            background: #FEF2F2;
+        }
+
+        .page-card.dragging {
+            opacity: 0.5;
+        }
+
+        .page-preview {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            background: #F3F4F6;
+        }
+
+        .page-number {
+            text-align: center;
+            font-weight: 600;
+            margin: 0.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .page-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-btn {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #DC2626;
+        }
+
+        .restore-btn {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .restore-btn:hover {
+            background: #059669;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 0.5rem;
+        }
+
+        .toolbar-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .primary-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .secondary-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .info-banner {
+            background: #EEF2FF;
+            border: 1px solid var(--primary-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="5" width="24" height="30" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 10H28M12 15H28M12 20H24M12 25H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="28" cy="28" r="8" fill="#4F46E5"/>
+                    <path d="M28 24V32M24 28H32" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h1>PDF Editor</h1>
+            </div>
+            <p class="subtitle">Удаление и перестановка страниц PDF</p>
+            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.2); border-radius: 0.5rem;">
+                <p style="font-size: 0.9rem; margin: 0;">
+                    ✂️ Удаляйте ненужные страницы | 🔄 Меняйте порядок перетаскиванием | 💾 Сохраняйте новый PDF
+                </p>
+                <p style="font-size: 0.9rem; margin: 0.5rem 0 0 0;">
+                    <a href="/" style="color: white; text-decoration: underline;">← Вернуться к сжатию PDF</a>
+                </p>
+            </div>
+        </header>
+
+        <main>
+            <div class="upload-section" id="upload-section">
+                <div class="file-upload-area" id="drop-zone">
+                    <input type="file" id="pdf-file" accept="application/pdf" hidden>
+                    <div class="upload-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="upload-text">Перетащите PDF файл сюда или <span class="browse-link">выберите файл</span></p>
+                    <p class="upload-hint">Максимум 50 MB</p>
+                </div>
+            </div>
+
+            <div id="editor-section" style="display: none;">
+                <div class="info-banner">
+                    <strong>💡 Как использовать:</strong> Нажмите "Удалить" чтобы убрать страницу. Перетаскивайте карточки чтобы изменить порядок.
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-pages">0</div>
+                        <div class="stat-label">Всего страниц</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="deleted-pages">0</div>
+                        <div class="stat-label">Удалено</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="remaining-pages">0</div>
+                        <div class="stat-label">Осталось</div>
+                    </div>
+                </div>
+
+                <div class="toolbar">
+                    <button class="toolbar-btn secondary-btn" id="select-all-btn">
+                        <span>Выбрать все</span>
+                    </button>
+                    <button class="toolbar-btn secondary-btn" id="delete-selected-btn">
+                        <span>Удалить выбранные</span>
+                    </button>
+                    <button class="toolbar-btn secondary-btn" id="restore-all-btn">
+                        <span>Восстановить все</span>
+                    </button>
+                    <button class="toolbar-btn primary-btn" id="save-pdf-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Сохранить PDF</span>
+                    </button>
+                </div>
+
+                <div class="pages-grid" id="pages-grid"></div>
+            </div>
+
+            <div class="progress-section" id="progress-section" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <p class="progress-text" id="progress-text">Обработка...</p>
+            </div>
+
+            <div class="error-section" id="error-section" style="display: none;">
+                <div class="result-card error">
+                    <div class="result-icon error">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <h3>Ошибка</h3>
+                    <p class="error-message" id="error-message"></p>
+                    <button class="reset-btn" id="error-reset-btn">Попробовать снова</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>🔒 Все файлы обрабатываются только в вашем браузере</p>
+            <p class="footer-note">Никакие данные не отправляются на сервер</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="pdf-editor.js"></script>
+</body>
+</html>
+
