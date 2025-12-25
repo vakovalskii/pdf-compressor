@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Compressor - Client-Side (GitHub Pages)</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="5" width="24" height="30" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 10H28M12 15H28M12 20H24M12 25H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="28" cy="28" r="8" fill="#4F46E5"/>
+                    <path d="M28 24V32M24 28H32" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h1>PDF Compressor</h1>
+            </div>
+            <p class="subtitle">🔒 Полностью клиентская обработка - файлы обрабатываются только в вашем браузере</p>
+            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.2); border-radius: 0.5rem;">
+                <p style="font-size: 0.9rem; margin: 0;">
+                    💡 Это GitHub Pages версия - работает полностью в браузере без сервера
+                </p>
+                <p style="font-size: 0.9rem; margin: 0.5rem 0 0 0;">
+                    ⚡ Для лучшего сжатия (70-90%) установите 
+                    <a href="https://github.com/vakovalskii/pdf-compressor" target="_blank" style="color: white; text-decoration: underline; font-weight: 600;">
+                        локальную версию с Ghostscript
+                    </a>
+                </p>
+            </div>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <form id="upload-form">
+                    <div class="file-upload-area" id="drop-zone">
+                        <input type="file" id="pdf-file" accept="application/pdf" required hidden>
+                        <div class="upload-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <p class="upload-text">Перетащите PDF файл сюда или <span class="browse-link">выберите файл</span></p>
+                        <p class="upload-hint">Файл обрабатывается только в вашем браузере</p>
+                    </div>
+
+                    <div class="file-info" id="file-info" style="display: none;">
+                        <div class="file-details">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                <polyline points="13 2 13 9 20 9"></polyline>
+                            </svg>
+                            <div class="file-text">
+                                <p class="file-name" id="file-name"></p>
+                                <p class="file-size" id="file-size"></p>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-file" id="remove-file">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="quality-section">
+                        <label class="section-label">Выберите качество сжатия:</label>
+                        <div class="quality-options">
+                            <label class="quality-option">
+                                <input type="radio" name="quality" value="low">
+                                <div class="option-content">
+                                    <div class="option-header">
+                                        <span class="option-title">Низкое качество</span>
+                                        <span class="option-badge">Макс. сжатие</span>
+                                    </div>
+                                    <p class="option-description">Максимальное сжатие изображений (качество 0.3)</p>
+                                </div>
+                            </label>
+
+                            <label class="quality-option">
+                                <input type="radio" name="quality" value="medium" checked>
+                                <div class="option-content">
+                                    <div class="option-header">
+                                        <span class="option-title">Среднее качество</span>
+                                        <span class="option-badge">Баланс</span>
+                                    </div>
+                                    <p class="option-description">Оптимальный баланс (качество 0.6)</p>
+                                </div>
+                            </label>
+
+                            <label class="quality-option">
+                                <input type="radio" name="quality" value="high">
+                                <div class="option-content">
+                                    <div class="option-header">
+                                        <span class="option-title">Высокое качество</span>
+                                        <span class="option-badge">Мин. потери</span>
+                                    </div>
+                                    <p class="option-description">Минимальная потеря качества (качество 0.85)</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="compress-btn" id="compress-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Сжать PDF (в браузере)</span>
+                    </button>
+                </form>
+
+                <div class="progress-section" id="progress-section" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">Сжатие файла в браузере...</p>
+                </div>
+
+                <div class="result-section" id="result-section" style="display: none;">
+                    <div class="result-card">
+                        <div class="result-icon success">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Файл успешно сжат!</h3>
+                        <div class="result-stats">
+                            <div class="stat">
+                                <span class="stat-label">Исходный размер:</span>
+                                <span class="stat-value" id="original-size"></span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Новый размер:</span>
+                                <span class="stat-value" id="compressed-size"></span>
+                            </div>
+                            <div class="stat highlight">
+                                <span class="stat-label">Сэкономлено:</span>
+                                <span class="stat-value" id="saved-size"></span>
+                            </div>
+                        </div>
+                        <button class="reset-btn" id="reset-btn">Сжать ещё один файл</button>
+                    </div>
+                </div>
+
+                <div class="error-section" id="error-section" style="display: none;">
+                    <div class="result-card error">
+                        <div class="result-icon error">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <h3>Ошибка при сжатии</h3>
+                        <p class="error-message" id="error-message"></p>
+                        <button class="reset-btn" id="error-reset-btn">Попробовать снова</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>🔒 Файл обрабатывается только в вашем браузере</p>
+            <p class="footer-note">Никакие данные не отправляются на сервер - всё происходит локально в браузере</p>
+            <p style="margin-top: 1rem;">
+                <a href="https://github.com/vakovalskii/pdf-compressor" target="_blank" style="color: white; text-decoration: underline;">
+                    ⭐ GitHub Repository
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- PDF.js library для работы с PDF в браузере -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
